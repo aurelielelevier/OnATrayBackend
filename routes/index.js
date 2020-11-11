@@ -9,18 +9,19 @@ var talentModel = require('../model/talents')
 var restaurantModel = require ('../model/restaurants')
 
 router.post('/sign_in', async function(req,res,next){
+  
   //On cherche d'abord dans la base de données talents (logiquement leur nombre sera superieur)
     var talentToSearch = await talentModel.findOne({email : req.body.email})
     if(talentToSearch){
       var hash = SHA256(req.body.password + talentToSearch.salt).toString(encBase64)
       if (talentToSearch.password == hash){
         res.json({result:true, type:'talent', token: talentToSearch.token, adresse: talentToSearch.adresselgtlat, zone: talentToSearch.perimetre, profil: talentToSearch, pseudo: talentToSearch.firstName})
-      }else{
+      }else {
         res.json({result : 'Error'})
       }
     }
     //Sinon on cherche dans base de données restaurants
-    else{
+    else {
       var restauToSearch = await restaurantModel.findOne({email : req.body.email})
       if(restauToSearch){
         var hashh = SHA256(req.body.password + restauToSearch.salt).toString(encBase64)
