@@ -7,6 +7,8 @@ var encBase64 = require("crypto-js/enc-base64");
 
 var talentModel = require('../model/talents')
 var restaurantModel = require ('../model/restaurants')
+var formationModel = require('../model/formation')
+var experienceModel = require('../model/experience')
 
 router.post('/sign_in', async function(req,res,next){
   
@@ -15,6 +17,8 @@ router.post('/sign_in', async function(req,res,next){
     if(talentToSearch){
       var hash = SHA256(req.body.password + talentToSearch.salt).toString(encBase64)
       if (talentToSearch.password == hash){
+        console.log(talentToSearch.wishlistTalent)
+        talentToSearch = await talentModel.findOne({email : req.body.email}).populate('wishlistTalent').populate('experience').populate('formation').exec()
         res.json({result:true, type:'talent', token: talentToSearch.token, adresse: talentToSearch.adresselgtlat, zone: talentToSearch.perimetre, profil: talentToSearch, pseudo: talentToSearch.firstName})
       }else {
         res.json({result : 'Error'})
@@ -38,8 +42,9 @@ router.post('/sign_in', async function(req,res,next){
 
 router.post('/connect', async function(req,res,next){
   //On cherche la présence de l'utilisateur dans la base de données talents :
-    var talentToSearch = await talentModel.findOne({token : req.body.token})
+    var talentToSearch = await talentModel.findOne({token : req.body.token}).populate('experience').populate('formation').exec()
     if(talentToSearch){
+      
       res.json({result:true, type:'talent', token: talentToSearch.token, adresse: talentToSearch.adresselgtlat, zone: talentToSearch.perimetre, profil: talentToSearch, pseudo: talentToSearch.firstName})
     }
     //Sinon on cherche dans base de données restaurants :
