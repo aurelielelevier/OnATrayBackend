@@ -30,6 +30,7 @@ router.post('/sign_in', async function(req,res,next){
       if(restauToSearch){
         var hashh = SHA256(req.body.password + restauToSearch.salt).toString(encBase64)
         if (restauToSearch.password == hashh){
+          console.log(restauToSearch)
           res.json({result : true, type:'restaurant', token: restauToSearch.token, adresse: restauToSearch.adresselgtlat, profil: restauToSearch, pseudo: restauToSearch.name})
         }else{
           res.json({result : 'Error'})
