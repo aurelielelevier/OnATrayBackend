@@ -2,6 +2,8 @@ var express = require('express');
 var router = express.Router();
 var talentModel = require('../model/talents')
 var restaurantModel = require('../model/restaurants')
+var experienceModel = require('../model/experience')
+var formationModel = require('../model/formation')
 const {request} = require('express');
 var uid2 = require('uid2');
 var SHA256 = require("crypto-js/sha256");
@@ -120,9 +122,7 @@ router.post(`/recherche-liste-restaurants`, async function(req, res, next){
   });
 
   router.post('/informations', async function(req,res,next){
-
     dateFormat = function (date) {
-   
       let day = ("0" + date.getDate()).slice(-2);
       let month = ("0" + (date.getMonth() + 1)).slice(-2);
       let year = date.getFullYear();
@@ -134,7 +134,7 @@ router.post(`/recherche-liste-restaurants`, async function(req, res, next){
     var langage = JSON.parse(req.body.langage)
     var typeofContract=JSON.parse(req.body.contrat)
   
-    await talentModel.updateOne({token:req.body.token},{speakLangage:langage, working:req.body.poste, lookingForJob: req.body.recherche, lookingJob:job, typeofContract:req.body.contrat})
+    await talentModel.updateOne({token:req.body.token},{speakLangage:langage, working:req.body.poste, lookingForJob: req.body.recherche, lookingJob:job, typeofContract:typeofContract})
     
     var formation = JSON.parse(req.body.formation)
     var experience = JSON.parse(req.body.experience)
@@ -161,6 +161,23 @@ router.post(`/recherche-liste-restaurants`, async function(req, res, next){
     await newExperience.save();
     await talentModel.updateOne({token:req.body.token},{$addToSet:{experience:newExperience.id}})
     }
+    var user = await talentModel.findOne({token:req.body.token})
+    res.json(user)
+  })
+
+  router.post('/envoi-secteur', async function(req, res, next){
+    var lnglat = JSON.parse(req.body.lnglat)
+    var listePoints = await JSON.parse(req.body.liste);
+    listePoints.push(listePoints[0]);
+    await talentModel.updateOne({ token: req.body.token }, {perimetre: listePoints,adress:req.body.adresse, adresselgtlat:lnglat, polygone: {
+      type: "Polygon" ,
+      coordinates: [
+        listePoints
+      ]
+   }})
+  var user = await talentModel.findOne({ token: req.body.token })
+  res.json(user)
   })
   
+
   module.exports = router;
