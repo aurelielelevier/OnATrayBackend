@@ -161,7 +161,7 @@ router.post(`/recherche-liste-restaurants`, async function(req, res, next){
     await newExperience.save();
     await talentModel.updateOne({token:req.body.token},{$addToSet:{experience:newExperience.id}})
     }
-    var user = await talentModel.findOne({token:req.body.token})
+    var user = await talentModel.findOne({token:req.params.token}).populate('formation').populate('experience').populate('wishlistTalent').exec();
     res.json(user)
   })
 
@@ -175,7 +175,7 @@ router.post(`/recherche-liste-restaurants`, async function(req, res, next){
         listePoints
       ]
    }})
-  var user = await talentModel.findOne({ token: req.body.token })
+   var user = await talentModel.findOne({token:req.params.token}).populate('formation').populate('experience').populate('wishlistTalent').exec();
   res.json(user)
   })
   

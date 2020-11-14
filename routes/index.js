@@ -5,6 +5,14 @@ var uid2 = require("uid2");
 var SHA256 = require("crypto-js/sha256");
 var encBase64 = require("crypto-js/enc-base64");
 
+var cloudinary = require('cloudinary').v2;
+cloudinary.config({ 
+  cloud_name: 'dpyqb49ha', 
+  api_key: '513712396958631', 
+  api_secret: 'VQta0R5Tlg-lEsbYWnLjh-AnN1I' 
+});
+const fs = require('fs');
+
 var talentModel = require('../model/talents')
 var restaurantModel = require ('../model/restaurants')
 var formationModel = require('../model/formation')
@@ -31,6 +39,7 @@ router.post('/sign_in', async function(req,res,next){
         var hashh = SHA256(req.body.password + restauToSearch.salt).toString(encBase64)
         if (restauToSearch.password == hashh){
           console.log(restauToSearch)
+        restauToSearch = await restaurantModel.findOne({email : req.body.email}).populate('wishlistRestaurant').exec()
           res.json({result : true, type:'restaurant', token: restauToSearch.token, adresse: restauToSearch.adresselgtlat, profil: restauToSearch, pseudo: restauToSearch.name})
         }else{
           res.json({result : 'Error'})
@@ -41,17 +50,26 @@ router.post('/sign_in', async function(req,res,next){
     }
   })
 
-router.post('/connect', async function(req,res,next){
-  //On cherche la présence de l'utilisateur dans la base de données talents :
-    var talentToSearch = await talentModel.findOne({token : req.body.token}).populate('experience').populate('formation').exec()
-    if(talentToSearch){
-      
-      res.json({result:true, type:'talent', token: talentToSearch.token, adresse: talentToSearch.adresselgtlat, zone: talentToSearch.perimetre, profil: talentToSearch, pseudo: talentToSearch.firstName})
-    }
-    //Sinon on cherche dans base de données restaurants :
-    else{
-      res.json({result : true, type:'restaurant', token: restauToSearch.token, adresse: restauToSearch.adresselgtlat, profil: restauToSearch, pseudo: restauToSearch.name})
-    }
-  })
+  router.post('/upload/:token', async function(req, res, next) {
+    // upload de la photo de profil et enregistrement sur Cloudinary, copie du lien en BDD
+    // si l'utilisateur fait partie des restaurants :
+    if (await restaurantModel.findOne({token:req.params.token})){
+      var uniqidPhoto = `/tmp/${uniqid()}${req.files.photo.name}`
+      var resultCopy = await req.files.photo.mv(uniqidPhoto);
+      var resultCloudinary = await cloudinary.uploader.upload(uniqidPhoto);
+      await restaurantModel.updateOne({token:req.params.token}, {photo: resultCloudinary.url})
+      var user = await restaurantModel.findOne({token:req.params.token});
+  
+    } else {
+      // si l'utilisateur fait partie des talents :
+      var uniqidPhoto = `/tmp/${uniqid()}${req.files.photo.name}`
+      var resultCopy = await req.files.photo.mv(uniqidPhoto);
+      var resultCloudinary = await cloudinary.uploader.upload(uniqidPhoto);
+      var user = await talentModel.updateOne({token:req.params.token}, {avatar:resultCloudinary.url})
+      var user = await talentModel.findOne({token:req.params.token}).populate('formation').populate('experience').populate('wishlistTalent').exec();
+      }
+      fs.unlinkSync(uniqidPhoto)
+      res.json(user)
+  });
   
 module.exports = router;
