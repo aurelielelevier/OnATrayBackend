@@ -58,7 +58,7 @@ router.post('/sign_in', async function(req,res,next){
       var resultCopy = await req.files.photo.mv(uniqidPhoto);
       var resultCloudinary = await cloudinary.uploader.upload(uniqidPhoto);
       await restaurantModel.updateOne({token:req.params.token}, {photo: resultCloudinary.url})
-      var user = await restaurantModel.findOne({token:req.params.token});
+      var user = await restaurantModel.findOne({token:req.params.token}).populate('wishlistRestaurant').exec();;
   
     } else {
       // si l'utilisateur fait partie des talents :

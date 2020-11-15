@@ -2,6 +2,56 @@ var express = require('express');
 var router = express.Router();
 var talentModel = require('../model/talents')
 var restaurantModel = require('../model/restaurants')
+var uid2 = require('uid2');
+var SHA256 = require("crypto-js/sha256");
+var encBase64 = require("crypto-js/enc-base64");
+
+router.post('/createAccount', async function(req,res,next){
+    // Création des profils, ajout en base de donnée avec un avatar non personnalisé, sécurisation du mot de passe
+    console.log(req.body)
+    var avatar = "https://cdn.pixabay.com/photo/2016/11/29/12/54/bar-1869656_1280.jpg"
+    var salt = uid2(32)
+    var restauToCheck = await restaurantModel.findOne({email:req.body.restaurantEmail})
+    if(restauToCheck === null){
+      var newRestau = await new restaurantModel({
+        name : req.body.restaurantName,
+        email : req.body.restaurantEmail,
+        salt : salt,
+        password : SHA256(req.body.restaurantPassword + salt).toString(encBase64),
+        token: uid2(32), 
+        siret : req.body.restaurantSiret,
+        photo : avatar ,
+        website : req.body.restaurantWebsite,
+        phone : req.body.phoneRestaurant,
+        adress : req.body.restaurantAdress,
+        clientele: [],
+        pricing:4,
+        typeOfRestaurant:[],
+        typeOfFood:[],
+        wishlistRestaurant:[],
+        experience:[],
+        adresselgtlat: JSON.parse(req.body.lnglat),
+        chatRoom:[],
+      })
+      var restauSaved = await newRestau.save();
+      console.log(restauSaved)
+      if(restauSaved){
+        res.json(restauSaved)
+      }else{
+        res.json(false)
+      }
+    }
+})
+
+router.put('/informations', async function(req,res,next){
+    var clientele = JSON.parse(req.body.clientele)
+    var type = JSON.parse(req.body.restaurantOption)
+    var cuisine = JSON.parse(req.body.foodOption)
+    var prix = req.body.pricing
+    await restaurantModel.updateOne({token:req.body.token},{clientele: clientele, typeOfRestaurant : type, typeOfFood: cuisine, pricing : prix})
+    var restaurant = await restaurantModel.findOne({token:req.body.token})
+    res.json(restaurant)
+})
 
 router.post('/recherche-liste-talents', async function(req,res,next){
    var données= JSON.parse(req.body.criteres)
