@@ -1,14 +1,13 @@
 var express = require('express');
 var router = express.Router();
-var talentModel = require('../model/talents')
-var restaurantModel = require('../model/restaurants')
+var talentModel = require('../model/talents');
+var restaurantModel = require('../model/restaurants');
 var uid2 = require('uid2');
 var SHA256 = require("crypto-js/sha256");
 var encBase64 = require("crypto-js/enc-base64");
 
 router.post('/createAccount', async function(req,res,next){
     // Création des profils, ajout en base de donnée avec un avatar non personnalisé, sécurisation du mot de passe
-    console.log(req.body)
     var avatar = "https://cdn.pixabay.com/photo/2016/11/29/12/54/bar-1869656_1280.jpg"
     var salt = uid2(32)
     var restauToCheck = await restaurantModel.findOne({email:req.body.restaurantEmail})
@@ -34,22 +33,23 @@ router.post('/createAccount', async function(req,res,next){
         chatRoom:[],
       })
       var restauSaved = await newRestau.save();
-      console.log(restauSaved)
       if(restauSaved){
         res.json(restauSaved)
       }else{
         res.json(false)
       }
     }
-})
+});
 
 router.put('/informations', async function(req,res,next){
+    // recherche du restaurant avec son token et mise à jour des informations :
     var clientele = JSON.parse(req.body.clientele)
     var type = JSON.parse(req.body.restaurantOption)
     var cuisine = JSON.parse(req.body.foodOption)
     var prix = req.body.pricing
     await restaurantModel.updateOne({token:req.body.token},{clientele: clientele, typeOfRestaurant : type, typeOfFood: cuisine, pricing : prix})
     var restaurant = await restaurantModel.findOne({token:req.body.token})
+    // renvoi du profil à jour :
     res.json(restaurant)
 })
 
@@ -82,21 +82,18 @@ router.post('/recherche-liste-talents', async function(req,res,next){
 router.post('/wishlist', async function (req,res,next){
     var user = await restaurantModel.findOne({token: req.body.token})
     var talent = await talentModel.findOne({_id: req.body.id})
-
+    // vérification si l'Id est déja en wishlist:
     if(user.wishlistRestaurant.includes(talent.id)){ 
+        // suppression si oui :
         await restaurantModel.updateOne({token: req.body.token}, { $pull: {wishlistRestaurant:{ $in:`${req.body.id}` }} })
-        console.log('retrait wishlist')  
-   // await talentModel.findByIdAndUpdate(talent.id,{$inc:{countFave:-1,"metrics.orders": 1}})
     } else {
+        // ajout si non :
         await restaurantModel.updateOne({token: req.body.token}, {$addToSet:{ wishlistRestaurant:req.body.id}})
-    //    await talentModel.findByIdAndUpdate(talent.id,{$inc:{countFave:+1,"metrics.orders": 1}})
-        console.log('ajout wishlist')}
-
+    }
     var responseAenvoyer= await talentModel.find().populate('formation').populate('experience').exec()
     var restaurant= await restaurantModel.findOne({token:req.body.token}).populate('wishlistRestaurant').exec()
-    console.log(restaurant.wishlistRestaurant)
-
-res.json({profil: restaurant,liste: responseAenvoyer})
+    // renvoi du profil du restaurant à jour et de la wishlist avec les informtions complétées des talents:
+    res.json({profil: restaurant, liste: responseAenvoyer})
 })
 
 router.get('/affiche-whishlist/:token', async function( req, res, next){
@@ -105,8 +102,7 @@ router.get('/affiche-whishlist/:token', async function( req, res, next){
     var user = await restaurantModel.findOne({token: req.params.token})
     var wishlist = user.wishlistRestaurant
     var liste = await talentModel.find({_id : {$in: wishlist}}).populate('formation').populate('experience').exec()
-
-    console.log(liste)
+    // renvoi de la liste :
     res.json(liste)
   });
 
