@@ -1,3 +1,7 @@
+const nameMongoDB = process.env.NAME_MONGODB
+const password = process.env.PASSWORD
+const collection = process.env.COLLECTION
+
 var mongoose = require('mongoose');
 
 var options = {
@@ -6,7 +10,7 @@ var options = {
     useNewUrlParser: true,
 }
 
-mongoose.connect('mongodb+srv://aurelie:aurelie93@cluster0.5gyqg.mongodb.net/onatray?retryWrites=true&w=majority',
+mongoose.connect(`mongodb+srv://${nameMongoDB}:${password}@cluster0.5gyqg.mongodb.net/${collection}?retryWrites=true&w=majority`,
     options,
     function(err){
         if(!err){
