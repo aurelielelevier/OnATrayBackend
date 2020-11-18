@@ -7,9 +7,9 @@ var encBase64 = require("crypto-js/enc-base64");
 
 var cloudinary = require('cloudinary').v2;
 cloudinary.config({ 
-  cloud_name: 'dpyqb49ha', 
-  api_key: '513712396958631', 
-  api_secret: 'VQta0R5Tlg-lEsbYWnLjh-AnN1I' 
+  cloud_name: CLOUDINARY_NAME, 
+  api_key: CLOUDINARY_API_KEY, 
+  api_secret: process.env.CLOUDINARY_API_SECRET
 });
 const fs = require('fs');
 
