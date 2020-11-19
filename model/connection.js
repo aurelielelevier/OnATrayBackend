@@ -6,7 +6,7 @@ var options = {
     useNewUrlParser: true,
 }
 
-mongoose.connect(`mongodb+srv://${process.env.NAME_MONGODB}:${process.env.PASSWORD}@cluster0.5gyqg.mongodb.net/${process.env.COLLECTION}?retryWrites=true&w=majority`,
+mongoose.connect(`mongodb+srv://${process.env.MONGODB}`,
     options,
     function(err){
         if(!err){
