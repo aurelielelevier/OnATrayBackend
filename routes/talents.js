@@ -162,7 +162,7 @@ router.put('/informations', async function(req,res,next){
   await newExperience.save();
   await talentModel.updateOne({token:req.body.token},{$addToSet:{experience:newExperience.id}})
   }
-  var user = await talentModel.findOne({token:req.params.token}).populate('formation').populate('experience').populate('wishlistTalent').exec();
+  var user = await talentModel.findOne({token:req.body.token}).populate('formation').populate('experience').populate('wishlistTalent').exec();
   // renvoi du profil à jour :
   res.json(user)
 })
@@ -170,9 +170,14 @@ router.put('/informations', async function(req,res,next){
 router.post('/envoi-secteur', async function(req, res, next){
   // recherche du talent avec son token et enregistrement de l'adresse, du perimètre et du polygone
   var lnglat = JSON.parse(req.body.lnglat)
-  var listePoints = await JSON.parse(req.body.liste);
-  listePoints.push(listePoints[0]);
-  await talentModel.updateOne({ token: req.body.token }, {perimetre: listePoints,adress:req.body.adresse, adresselgtlat:lnglat, polygone: {
+  if(req.body.liste){
+    var listePoints = await JSON.parse(req.body.liste);
+    listePoints.push(listePoints[0]);
+  } else {
+    var listePoints = zoneFrance
+  }
+  
+  await talentModel.updateOne({ token: req.body.token }, {perimetre: listePoints, adress:req.body.adresse, adresselgtlat:lnglat, polygone: {
     type: "Polygon" ,
     coordinates: [
       listePoints
