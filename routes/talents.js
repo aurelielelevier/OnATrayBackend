@@ -80,7 +80,7 @@ router.post(`/recherche-liste-restaurants`, async function(req, res, next){
           $geoIntersects: {
              $geometry: {
                 type: "Polygon" ,
-                coordinates: [donnees.zone.coordinates],
+                coordinates: [donnees.zone],
              }
           }
         },
